@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Document AI - AE Reconstruction</title>
+    <!-- Use Inter font for a premium look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide icons for clean, modern SVG icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Loan document AI</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- Main Nav -->
+                <ul class="nav-group">
+                    <li>
+                        <label for="file-upload" class="nav-item upload-btn">
+                            <i data-lucide="upload"></i>
+                            <span>Upload document</span>
+                        </label>
+                        <input type="file" id="file-upload" accept="image/*" style="display: none;">
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item active">
+                            <i data-lucide="activity"></i>
+                            <span>AE reconstruction</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item">
+                            <i data-lucide="box"></i>
+                            <span>VAE scenarios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item">
+                            <i data-lucide="scan-text"></i>
+                            <span>Field extraction</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item">
+                            <i data-lucide="triangle-alert"></i>
+                            <span>Risk flags</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Phase 2 Nav -->
+                <div class="nav-section">
+                    <span class="nav-section-title">Phase 2</span>
+                    <ul class="nav-group">
+                        <li>
+                            <a href="#" class="nav-item disabled">
+                                <i data-lucide="sparkles"></i>
+                                <span>GAN synthesis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item disabled">
+                                <i data-lucide="wand-2"></i>
+                                <span>Diffusion synthesis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item disabled">
+                                <i data-lucide="scale"></i>
+                                <span>Real vs synthetic</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>AE reconstruction</h1>
+                <p>Original scan vs cleaned reconstruction</p>
+            </header>
+
+            <div class="reconstruction-viewer">
+                <!-- Original Image View -->
+                <div class="view-panel">
+                    <h3>Original</h3>
+                    <div class="image-container" id="original-container">
+                        <div class="placeholder">
+                            <i data-lucide="file-text"></i>
+                        </div>
+                        <img id="original-img" src="" alt="Original Document" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- Reconstructed Image View -->
+                <div class="view-panel">
+                    <h3>Reconstructed</h3>
+                    <div class="image-container" id="reconstructed-container">
+                        <div class="placeholder">
+                            <i data-lucide="file-check-2"></i>
+                        </div>
+                        <img id="reconstructed-img" src="" alt="Reconstructed Document" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="metrics-container">
+                <div class="metric-card">
+                    <span class="metric-label">SSIM</span>
+                    <span class="metric-value" id="val-ssim">--</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">PSNR</span>
+                    <span class="metric-value" id="val-psnr">-- dB</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">OCR match</span>
+                    <span class="metric-value" id="val-ocr">--%</span>
+                </div>
+            </div>
+            
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing with Autoencoder...</p>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
