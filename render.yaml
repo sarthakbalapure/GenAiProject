@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: final-gen-ai-project
+    env: docker
+    region: oregon
+    plan: free # Note: Depending on memory usage you might need a higher tier (starter) for PyTorch
+    branch: main
+    dockerCommand: "uvicorn api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PORT
+        value: 8000
