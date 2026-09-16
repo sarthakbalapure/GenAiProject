@@ -231,14 +231,46 @@ class CompositeLoss(nn.Module):
         }
 
 
+class VAELoss(nn.Module):
+    """
+    Composite Loss + KL Divergence for VAE.
+    """
+    def __init__(self, beta: float = 0.01):
+        super().__init__()
+        self.recon_loss = CompositeLoss()
+        self.beta = beta
+
+    def forward(self, pred: torch.Tensor, target: torch.Tensor, mu: torch.Tensor, logvar: torch.Tensor) -> dict:
+        """
+        Compute reconstruction and KL divergence losses.
+        """
+        losses = self.recon_loss(pred, target)
+        
+        # KL divergence for spatial mu and logvar
+        # D_KL = -0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+        
+        # Normalize KL by batch size and spatial dimensions to keep it comparable
+        kl_loss = kl_loss / (mu.size(0) * mu.size(1) * mu.size(2) * mu.size(3))
+        
+        total_loss = losses["total"] + self.beta * kl_loss
+        
+        losses["kl"] = kl_loss.item()
+        losses["total_vae"] = total_loss
+        
+        return losses
+
+
 if __name__ == "__main__":
     # Quick test: verify loss computation
-    loss_fn = CompositeLoss().to(DEVICE)
+    loss_fn = VAELoss(beta=0.01).to(DEVICE)
 
     pred = torch.rand(2, 3, 512, 512, device=DEVICE)
     target = torch.rand(2, 3, 512, 512, device=DEVICE)
+    mu = torch.randn(2, 512, 32, 32, device=DEVICE)
+    logvar = torch.randn(2, 512, 32, 32, device=DEVICE)
 
-    losses = loss_fn(pred, target)
+    losses = loss_fn(pred, target, mu, logvar)
     for k, v in losses.items():
         val = v.item() if torch.is_tensor(v) else v
         print(f"{k}: {val:.6f}")

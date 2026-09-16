@@ -135,6 +135,70 @@ class DocumentAutoencoder(nn.Module):
         return self.decode(bn, skips)
 
 
+class DocumentVAE(DocumentAutoencoder):
+    """
+    Variational Autoencoder extension of the DocumentAutoencoder.
+    Uses the same encoder/decoder structure, but reparameterizes the bottleneck.
+    """
+    def __init__(self):
+        super().__init__()
+        
+        # Replace the bottleneck from DocumentAutoencoder with mu and logvar
+        # The output of enc4 is (B, 512, 32, 32)
+        self.fc_mu = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False)
+        self.fc_logvar = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False)
+        
+        # Optional: batch norm for stability after mu/logvar projection
+        self.bn_mu = nn.BatchNorm2d(512)
+        self.bn_logvar = nn.BatchNorm2d(512)
+        
+    def encode_vae(self, x: torch.Tensor) -> tuple:
+        """
+        Encode input image, returning mu, logvar, and skip connections.
+        """
+        e1 = self.enc1(x)    # (B, 64, 256, 256)
+        e2 = self.enc2(e1)   # (B, 128, 128, 128)
+        e3 = self.enc3(e2)   # (B, 256, 64, 64)
+        e4 = self.enc4(e3)   # (B, 512, 32, 32)
+        
+        mu = self.bn_mu(self.fc_mu(e4))
+        logvar = self.bn_logvar(self.fc_logvar(e4))
+        
+        return mu, logvar, (x, e1, e2, e3)
+        
+    def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
+        """
+        Reparameterization trick to sample z from N(mu, var).
+        Temperature scales the variance for sampling diversity.
+        """
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std) * temperature
+        return mu + eps * std
+        
+    def forward(self, x: torch.Tensor, temperature: float = 1.0, sample_mode: bool = False) -> tuple:
+        """
+        Forward pass for VAE.
+        Returns:
+            out (Tensor): Reconstructed image
+            mu (Tensor): Mean of latent distribution
+            logvar (Tensor): Log variance of latent distribution
+        """
+        mu, logvar, skips = self.encode_vae(x)
+        z = self.reparameterize(mu, logvar, temperature)
+        
+        # Skip-Dropout: Force the network to use the latent space by randomly dropping
+        # skip connections 50% of the time during training.
+        if self.training and torch.rand(1).item() < 0.5:
+            skips = tuple(torch.zeros_like(s) for s in skips)
+            
+        # Pure Latent Generation: When generating samples, we zero out the skips entirely.
+        if sample_mode:
+            skips = tuple(torch.zeros_like(s) for s in skips)
+            
+        out = self.decode(z, skips)
+        return out, mu, logvar
+
+
 def count_parameters(model: nn.Module) -> int:
     """Count total trainable parameters."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -142,18 +206,14 @@ def count_parameters(model: nn.Module) -> int:
 
 if __name__ == "__main__":
     # Quick test: verify shapes and parameter count
-    model = DocumentAutoencoder()
+    model = DocumentVAE()
     print(f"Total parameters: {count_parameters(model):,}")
 
     x = torch.randn(1, 3, 512, 512)
     with torch.no_grad():
-        out = model(x)
+        out, mu, logvar = model(x)
     print(f"Input shape:  {x.shape}")
     print(f"Output shape: {out.shape}")
+    print(f"Mu shape:     {mu.shape}")
+    print(f"Logvar shape: {logvar.shape}")
     print(f"Output range: [{out.min():.3f}, {out.max():.3f}]")
-
-    # Verify encoder output
-    bn, skips = model.encode(x)
-    print(f"Bottleneck shape: {bn.shape}")
-    for i, s in enumerate(skips):
-        print(f"Skip {i} shape: {s.shape}")

@@ -59,3 +59,7 @@ LATENT_SPATIAL = IMG_SIZE // (2 ** 4)        # 512/16 = 32 (spatial size at bott
 # ─── Logging ─────────────────────────────────────────────────────────────────
 SAVE_GRID_EVERY = 1      # Save reconstruction comparison grids every N epochs
 LOG_INTERVAL = 10        # Print batch-level loss every N batches
+
+# ─── VAE Configuration ───────────────────────────────────────────────────────
+VAE_BETA = 0.0001        # Lowered KL scaling factor to prevent Posterior Collapse
+VAE_EPOCHS = 30          # Epochs for VAE training

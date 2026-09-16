@@ -29,19 +29,19 @@
                         <input type="file" id="file-upload" accept="image/*" style="display: none;">
                     </li>
                     <li>
-                        <a href="#" class="nav-item active">
+                        <a href="#" class="nav-item active" id="nav-ae">
                             <i data-lucide="activity"></i>
                             <span>AE reconstruction</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-item">
+                        <a href="#" class="nav-item" id="nav-vae-scenarios">
                             <i data-lucide="box"></i>
                             <span>VAE scenarios</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-item">
+                        <a href="#" class="nav-item" id="nav-extraction">
                             <i data-lucide="scan-text"></i>
                             <span>Field extraction</span>
                         </a>
@@ -83,55 +83,162 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <header class="content-header">
-                <h1>AE reconstruction</h1>
-                <p>Original scan vs cleaned reconstruction</p>
-            </header>
+            <!-- AE Reconstruction View -->
+            <div id="ae-view">
+                <header class="content-header">
+                    <h1>AE reconstruction</h1>
+                    <p>Original scan vs cleaned reconstruction</p>
+                </header>
 
-            <div class="reconstruction-viewer">
-                <!-- Original Image View -->
-                <div class="view-panel">
-                    <h3>Original</h3>
-                    <div class="image-container" id="original-container">
-                        <div class="placeholder">
-                            <i data-lucide="file-text"></i>
+                <div class="reconstruction-viewer">
+                    <!-- Original Image View -->
+                    <div class="view-panel">
+                        <h3>Original</h3>
+                        <div class="image-container" id="original-container">
+                            <div class="placeholder">
+                                <i data-lucide="file-text"></i>
+                            </div>
+                            <img id="original-img" src="" alt="Original Document" style="display: none;">
                         </div>
-                        <img id="original-img" src="" alt="Original Document" style="display: none;">
+                    </div>
+
+                    <!-- Reconstructed Image View -->
+                    <div class="view-panel">
+                        <h3>Reconstructed</h3>
+                        <div class="image-container" id="reconstructed-container">
+                            <div class="placeholder">
+                                <i data-lucide="file-check-2"></i>
+                            </div>
+                            <img id="reconstructed-img" src="" alt="Reconstructed Document" style="display: none;">
+                        </div>
                     </div>
                 </div>
 
-                <!-- Reconstructed Image View -->
-                <div class="view-panel">
-                    <h3>Reconstructed</h3>
-                    <div class="image-container" id="reconstructed-container">
-                        <div class="placeholder">
-                            <i data-lucide="file-check-2"></i>
-                        </div>
-                        <img id="reconstructed-img" src="" alt="Reconstructed Document" style="display: none;">
+                <!-- Metrics Cards -->
+                <div class="metrics-container">
+                    <div class="metric-card">
+                        <span class="metric-label">SSIM</span>
+                        <span class="metric-value" id="val-ssim">--</span>
                     </div>
+                    <div class="metric-card">
+                        <span class="metric-label">PSNR</span>
+                        <span class="metric-value" id="val-psnr">-- dB</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">OCR match</span>
+                        <span class="metric-value" id="val-ocr">--%</span>
+                    </div>
+                </div>
+                
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loading-ae" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing with Autoencoder...</p>
                 </div>
             </div>
 
-            <!-- Metrics Cards -->
-            <div class="metrics-container">
-                <div class="metric-card">
-                    <span class="metric-label">SSIM</span>
-                    <span class="metric-value" id="val-ssim">--</span>
+            <!-- VAE Scenarios View (Hidden by default) -->
+            <div id="vae-scenarios-view" style="display: none;">
+                <header class="content-header">
+                    <h1>VAE scenarios</h1>
+                    <p class="subtitle">Latent-space variations sampled around the uploaded document, for robustness testing</p>
+                </header>
+
+                <div class="control-bar">
+                    <label for="latent-slider">Latent variation</label>
+                    <input type="range" id="latent-slider" min="0" max="1" step="0.01" value="0.35">
+                    <span class="value-display" id="latent-value">0.35</span>
                 </div>
-                <div class="metric-card">
-                    <span class="metric-label">PSNR</span>
-                    <span class="metric-value" id="val-psnr">-- dB</span>
+
+                <div class="sample-grid">
+                    <div class="sample-col">
+                        <span class="col-title">Original</span>
+                        <div class="doc-card" id="vae-orig-container">
+                            <div class="doc-icon vae-placeholder"><i data-lucide="file-text"></i></div>
+                            <img id="vae-orig-img" src="" alt="Original" style="display: none; width:100%; height:100%; object-fit:contain; border-radius:12px;">
+                        </div>
+                    </div>
+                    <div class="sample-col">
+                        <span class="col-title">Sample 1</span>
+                        <div class="doc-card" id="vae-sample1-container">
+                            <div class="doc-icon vae-placeholder"><i data-lucide="file-text"></i></div>
+                            <img id="vae-sample1-img" src="" alt="Sample 1" style="display: none; width:100%; height:100%; object-fit:contain; border-radius:12px;">
+                        </div>
+                    </div>
+                    <div class="sample-col">
+                        <span class="col-title">Sample 2</span>
+                        <div class="doc-card" id="vae-sample2-container">
+                            <div class="doc-icon vae-placeholder"><i data-lucide="file-text"></i></div>
+                            <img id="vae-sample2-img" src="" alt="Sample 2" style="display: none; width:100%; height:100%; object-fit:contain; border-radius:12px;">
+                        </div>
+                    </div>
+                    <div class="sample-col">
+                        <span class="col-title">Sample 3</span>
+                        <div class="doc-card" id="vae-sample3-container">
+                            <div class="doc-icon vae-placeholder"><i data-lucide="file-text"></i></div>
+                            <img id="vae-sample3-img" src="" alt="Sample 3" style="display: none; width:100%; height:100%; object-fit:contain; border-radius:12px;">
+                        </div>
+                    </div>
                 </div>
-                <div class="metric-card">
-                    <span class="metric-label">OCR match</span>
-                    <span class="metric-value" id="val-ocr">--%</span>
+
+                <div class="info-banner">
+                    <span class="info-icon"><i data-lucide="info"></i></span>
+                    <span>Exploratory only — not a claim of realistic document generation at this dataset size.</span>
+                </div>
+                
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loading-vae" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Generating Variations...</p>
                 </div>
             </div>
-            
-            <!-- Loading Overlay -->
-            <div class="loading-overlay" id="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>Processing with Autoencoder...</p>
+
+            <!-- Field Extraction View -->
+            <div id="field-extraction-view" style="display: none;">
+                <header class="content-header">
+                    <h1>Field extraction</h1>
+                    <p class="subtitle">Document Transformer output on the cleaned reconstruction</p>
+                </header>
+                
+                <div class="extraction-layout">
+                    <div class="left-col">
+                        <span class="col-title" style="display:block; margin-bottom: 12px; font-size: 14px; color: #6b7280;">Cleaned doc</span>
+                        <div class="doc-card" id="extraction-doc-container" style="height: 400px;">
+                            <div class="doc-icon"><i data-lucide="file-check"></i></div>
+                            <img id="extraction-img" src="" alt="Cleaned Document" style="display: none; width:100%; height:100%; object-fit:contain; border-radius:12px;">
+                        </div>
+                    </div>
+                    <div class="right-col">
+                        <table class="extraction-table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Extracted value</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="extraction-tbody">
+                                <!-- Populated via JS -->
+                                <tr>
+                                    <td colspan="3" style="text-align:center; padding: 20px; color: var(--text-muted);">Upload a document to extract fields</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 24px; text-align: right;">
+                            <button class="btn-secondary" id="btn-send-risk">
+                                <span>Send to risk flags</span>
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loading-extraction" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Extracting Fields...</p>
+                </div>
             </div>
         </main>
     </div>
