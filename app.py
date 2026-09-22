@@ -1,4 +1,13 @@
 import os
+import subprocess
+
+try:
+    print("Attempting to pull Git LFS files...")
+    subprocess.run(["git", "lfs", "pull"], check=True)
+    print("Git LFS pull completed.")
+except Exception as e:
+    print(f"Git LFS pull skipped or failed: {e}")
+
 import io
 import torch
 import numpy as np
@@ -69,7 +78,8 @@ page = st.sidebar.radio("Navigation", [
     "VAE Scenario Generation", 
     "Transformer Field Extraction", 
     "Risk & Discrepancy Flags",
-    "Real vs Synthetic Quality (Phase 2)"
+    "Real vs Synthetic Quality (Phase 2)",
+    "Model Information"
 ])
 
 # File uploader in sidebar so it persists
@@ -283,3 +293,29 @@ elif page == "Risk & Discrepancy Flags":
 elif page == "Real vs Synthetic Quality (Phase 2)":
     st.header("Real vs Synthetic Quality")
     st.info("Coming in Phase 2")
+
+elif page == "Model Information":
+    st.header("Model Information")
+    st.markdown("""
+    ### 1. Convolutional Autoencoder (AE)
+    - **Purpose**: Reconstructs the input document image with maximum visual and text fidelity. Acts as the cleanup and denoising stage before data extraction.
+    - **Architecture**: Stacked Conv2D with progressively downsampling, bottleneck, and stacked ConvTranspose2D for upsampling.
+    
+    ### 2. Convolutional Variational Autoencoder (VAE)
+    - **Purpose**: Learns a latent distribution over document appearance. Used to sample plausible document-layout variations for robustness testing.
+    - **Architecture**: Similar to AE but with reparameterization trick (`mu`, `log_var`).
+    
+    ### 3. Document Transformer
+    - **Purpose**: Reads the (AE-cleaned) document and extracts structured key fields (COMPANY, DATE, ADDRESS, TOTAL).
+    - **Architecture**: LayoutLM-style token classification using text, 2D layout bounding-box embeddings, and image features.
+    """)
+    
+    st.subheader("Model Loading Status")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("AE Model", "Loaded" if 'ae' in models else "Failed/Not Found")
+    with col2:
+        st.metric("VAE Model", "Loaded" if 'vae' in models else "Failed/Not Found")
+    with col3:
+        st.metric("Transformer", "Loaded" if 'transformer' in models else "Failed/Not Found")
