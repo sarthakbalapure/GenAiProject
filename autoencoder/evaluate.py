@@ -36,8 +36,8 @@ def load_best_model() -> DocumentAutoencoder:
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
-    print(f"[Eval] Loaded checkpoint from epoch {checkpoint['epoch']}")
-    print(f"[Eval] Best val SSIM during training: {checkpoint['best_ssim']:.4f}")
+    print(f"[Eval] Loaded checkpoint from epoch {checkpoint.get('epoch', 'unknown')}")
+    print(f"[Eval] Best val SSIM during training: {checkpoint.get('best_ssim', 0.0):.4f}")
 
     return model, checkpoint
 
